@@ -1,4 +1,4 @@
-module github.com/mailergroup/purge-cf-cache-action
+module github.com/mailerlite/purge-cf-cache-action
 
 go 1.16
 
