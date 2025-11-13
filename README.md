@@ -9,7 +9,7 @@ All sensitive variables should be [set as encrypted secrets](https://help.github
 #### Run using CloudFlare auth token
 ```yaml
     - name: Purge cache
-      uses: mailergroup/purge-cf-cache-action@v0.0.2
+      uses: mailerlite/purge-cf-cache-action@v0.0.2
       with:
         cf_token: ${{ secrets.CF_TOKEN }}
         cf_zone_name: ${{ secrets.CF_ZONE_NAME }}
@@ -20,7 +20,7 @@ All sensitive variables should be [set as encrypted secrets](https://help.github
 To purge only specific files, you can pass an array of **fully qualified URLs** via a fourth environment variable named `CF_PURGE_URLS`.
 
 ```yaml
-cf_purge_urls: '["https://mailergroup.com/styles.css","https://mailergroup.com/app.js"]'
+cf_purge_urls: '["https://mailerlite.com/styles.css","https://mailerlite.com/app.js"]'
 ```
 
 ### Purging by host
@@ -28,5 +28,5 @@ cf_purge_urls: '["https://mailergroup.com/styles.css","https://mailergroup.com/a
 To purge only specific files, you can pass an array of **fully qualified URLs** via a fourth environment variable named `CF_PURGE_URLS`.
 
 ```yaml
-cf_purge_hosts: "https://mailergroup.com,https://foo.mailergroup.com"
+cf_purge_hosts: "https://mailerlite.com,https://foo.mailerlite.com"
 ```
