@@ -1,5 +1,5 @@
 # renovate: datasource=docker depName=europe-docker.pkg.dev/mailerlitehub/base-images/go
-ARG BASE_IMAGE=europe-docker.pkg.dev/mailerlitehub/base-images/go:v1.0.10-1.26
+ARG BASE_IMAGE=europe-docker.pkg.dev/mailerlitehub/base-images/go:v1.0.17-1.26@sha256:05385270a9b003035331e01af8e9e7badbd6624834a5a7a8ebae45d81d3801e8
 FROM ${BASE_IMAGE} AS build
 
 WORKDIR /src
