@@ -7,23 +7,53 @@ inputs:
     required: true
   cf_zone_name:
     description: "CF zone name manageable by ${cf_token}"
-    required: false
+    required: true
   cf_purge_hosts:
-    description: "If specified, it will purge comma-separated hosts."
+    description: "Comma-separated hosts to purge"
     required: false
+    default: ""
   cf_purge_urls:
-    description: "A comma-separated list of files to purge"
+    description: "Comma-separated fully qualified URLs to purge; used when cf_purge_hosts is empty"
     required: false
+    default: ""
   cf_purge_prefixes:
-    description: "A comma-separated list of prefixes to purge"
+    description: "Comma-separated URL prefixes to purge; used when hosts and URLs are empty"
     required: false
+    default: ""
 runs:
-  using: docker
-  image: Dockerfile
-  args:
-    - ${{ inputs.cf_token }}
-    - ${{ inputs.cf_zone_name }}
-    - ${{ inputs.cf_purge_hosts }}
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CF_TOKEN: ${{ inputs.cf_token }}
+        CF_ZONE_NAME: ${{ inputs.cf_zone_name }}
+        CF_PURGE_HOSTS: ${{ inputs.cf_purge_hosts }}
+        CF_PURGE_URLS: ${{ inputs.cf_purge_urls }}
+        CF_PURGE_PREFIXES: ${{ inputs.cf_purge_prefixes }}
+      run: |
+        set -euo pipefail
+
+        api=https://api.cloudflare.com/client/v4
+        auth=(-H "Authorization: Bearer ${CF_TOKEN}")
+
+        zone_id="$(curl -sS --fail-with-body "${auth[@]}" --get --data-urlencode "name=${CF_ZONE_NAME}" "${api}/zones" | jq -er '.result[0].id')"
+
+        split() { jq -nc --arg key "$1" --arg values "$2" '{($key): ($values | split(",") | map(select(length > 0)))}'; }
+        if [[ -n "$CF_PURGE_HOSTS" ]]; then
+          body="$(split hosts "$CF_PURGE_HOSTS")"
+        elif [[ -n "$CF_PURGE_URLS" ]]; then
+          body="$(split files "$CF_PURGE_URLS")"
+        elif [[ -n "$CF_PURGE_PREFIXES" ]]; then
+          body="$(split prefixes "$CF_PURGE_PREFIXES")"
+        else
+          body='{"purge_everything":true}'
+        fi
+        echo "Purging ${CF_ZONE_NAME}: ${body}"
+
+        curl -sS --fail-with-body -X POST "${auth[@]}" \
+          -H "Content-Type: application/json" \
+          --data "$body" \
+          "${api}/zones/${zone_id}/purge_cache" | jq -e 'if .success then true else (.errors | halt_error(1)) end'
 branding:
   color: orange
   icon: cloud
