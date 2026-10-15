@@ -25,3 +25,11 @@ Pass one comma-separated list. If more than one is set, hosts win over URLs, and
         cf_purge_urls: "https://mailerlite.com/styles.css,https://mailerlite.com/app.js"
         cf_purge_prefixes: "mailerlite.com/static/"
 ```
+
+### Invalidate instead of purge
+
+[Invalidation](https://developers.cloudflare.com/cache/guides/invalidate-cache/) marks content stale instead of deleting it. Cloudflare revalidates it with the origin on the next request, and keeps serving the stale copy if the origin errors. With `stale-while-revalidate` on the cached response, visitors get the stale copy while it revalidates instead of waiting. It takes the same selectors, token permission and rate limits as purge.
+
+```yaml
+        cf_mode: invalidate
+```
