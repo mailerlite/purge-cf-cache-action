@@ -36,7 +36,11 @@ runs:
         api=https://api.cloudflare.com/client/v4
         auth=(-H "Authorization: Bearer ${CF_TOKEN}")
 
-        zone_id="$(curl -sS --fail-with-body "${auth[@]}" --get --data-urlencode "name=${CF_ZONE_NAME}" "${api}/zones" | jq -er '.result[0].id')"
+        zone_resp="$(curl -sS --fail-with-body "${auth[@]}" --get --data-urlencode "name=${CF_ZONE_NAME}" "${api}/zones")" ||
+          { echo "Zone lookup for ${CF_ZONE_NAME} failed: ${zone_resp}" >&2; exit 1; }
+        zone_id="$(jq -r '.result[0].id // empty' <<<"$zone_resp")"
+        [[ -n "$zone_id" ]] ||
+          { echo "Zone ${CF_ZONE_NAME} not found or not accessible with this token: $(jq -c '.errors' <<<"$zone_resp")" >&2; exit 1; }
 
         split() { jq -nc --arg key "$1" --arg values "$2" '{($key): ($values | split(",") | map(select(length > 0)))}'; }
         if [[ -n "$CF_PURGE_HOSTS" ]]; then
